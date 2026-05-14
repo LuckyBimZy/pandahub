@@ -3,7 +3,7 @@
 -- Simpan di root folder
 
 local placeId = game.PlaceId
-local githubRaw = "https://raw.githubusercontent.com/LuckyBimZy/Machadepanmu/main/games/"
+local githubRaw = "https://raw.githubusercontent.com/LuckyBimZy/pandahub/main/games/"
 
 -- Daftar game yang didukung
 local supportedGames = {

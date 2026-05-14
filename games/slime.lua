@@ -4423,39 +4423,99 @@ end
 -- CORE LOGIC
 --==================================================
 
--- Auto Roll Loop
+-- Universal Auto Roll Loop
 task.spawn(function()
     while task.wait(getgenv().Config.RollSpeed) do
         if getgenv().Config.AutoRoll then
             pcall(function()
-                if RollRemote then
-                    RollRemote:InvokeServer() -- Menggunakan InvokeServer atau FireServer tergantung game
+                -- 1. Try Remotes
+                local rs = game:GetService("ReplicatedStorage")
+                for _, v in pairs(rs:GetDescendants()) do
+                    if v:IsA("RemoteEvent") and (v.Name:lower():match("roll") or v.Name:lower():match("spin")) then
+                        v:FireServer()
+                    elseif v:IsA("RemoteFunction") and (v.Name:lower():match("roll") or v.Name:lower():match("spin")) then
+                        v:InvokeServer()
+                    end
+                end
+                
+                -- 2. Try UI Clicking
+                local playerGui = Player:FindFirstChild("PlayerGui")
+                if playerGui then
+                    for _, gui in pairs(playerGui:GetDescendants()) do
+                        if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
+                            local name = gui.Name:lower()
+                            local text = ""
+                            if gui:IsA("TextButton") then text = gui.Text:lower() end
+                            if name:match("roll") or text:match("roll") or name:match("spin") or text:match("spin") then
+                                if getconnections then
+                                    for _, conn in pairs(getconnections(gui.MouseButton1Click)) do
+                                        conn:Fire()
+                                    end
+                                    for _, conn in pairs(getconnections(gui.Activated)) do
+                                        conn:Fire()
+                                    end
+                                end
+                            end
+                        end
+                    end
                 end
             end)
         end
     end
 end)
 
--- Auto Equip Best Logic (Contoh Implementasi)
+-- Universal Auto Equip Best Logic
 task.spawn(function()
     while task.wait(5) do
         if getgenv().Config.AutoEquipBest then
             pcall(function()
-                if EquipRemote then
-                    EquipRemote:InvokeServer("Best") -- Sesuaikan argumen dengan game
+                local rs = game:GetService("ReplicatedStorage")
+                for _, v in pairs(rs:GetDescendants()) do
+                    if v:IsA("RemoteEvent") and v.Name:lower():match("equip") then
+                        v:FireServer("Best")
+                        v:FireServer()
+                    elseif v:IsA("RemoteFunction") and v.Name:lower():match("equip") then
+                        v:InvokeServer("Best")
+                        v:InvokeServer()
+                    end
+                end
+                
+                local playerGui = Player:FindFirstChild("PlayerGui")
+                if playerGui then
+                    for _, gui in pairs(playerGui:GetDescendants()) do
+                        if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
+                            local name = gui.Name:lower()
+                            local text = ""
+                            if gui:IsA("TextButton") then text = gui.Text:lower() end
+                            if name:match("equip best") or text:match("equip best") then
+                                if getconnections then
+                                    for _, conn in pairs(getconnections(gui.MouseButton1Click)) do
+                                        conn:Fire()
+                                    end
+                                end
+                            end
+                        end
+                    end
                 end
             end)
         end
     end
 end)
 
--- Auto Craft Logic (Contoh Implementasi)
+-- Universal Auto Craft Logic
 task.spawn(function()
     while task.wait(10) do
         if getgenv().Config.AutoCraft then
             pcall(function()
-                if CraftRemote then
-                    CraftRemote:InvokeServer("CraftAll") -- Sesuaikan argumen
+                local rs = game:GetService("ReplicatedStorage")
+                for _, v in pairs(rs:GetDescendants()) do
+                    if v:IsA("RemoteEvent") and v.Name:lower():match("craft") then
+                        v:FireServer("All")
+                        v:FireServer()
+                    elseif v:IsA("RemoteFunction") and v.Name:lower():match("craft") then
+                        v:InvokeServer("All")
+                        v:InvokeServer()
+                    end
                 end
             end)
         end

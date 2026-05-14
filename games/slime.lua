@@ -4423,100 +4423,57 @@ end
 -- CORE LOGIC
 --==================================================
 
--- Universal Auto Roll Loop
+getgenv().Config.Coords = getgenv().Config.Coords or { Roll = {X=0,Y=0}, Equip = {X=0,Y=0}, Craft = {X=0,Y=0}, Rebirth = {X=0,Y=0} }
+getgenv().Config.AutoRebirth = getgenv().Config.AutoRebirth or false
+
+local VIM = game:GetService("VirtualInputManager")
+local function ClickAt(x, y)
+    if x > 0 and y > 0 then
+        VIM:SendMouseButtonEvent(x, y, 0, true, game, 1)
+        task.wait(0.05)
+        VIM:SendMouseButtonEvent(x, y, 0, false, game, 1)
+    end
+end
+
+-- VIM Auto Roll Loop
 task.spawn(function()
     while task.wait(getgenv().Config.RollSpeed) do
         if getgenv().Config.AutoRoll then
             pcall(function()
-                -- 1. Try Remotes
-                local rs = game:GetService("ReplicatedStorage")
-                for _, v in pairs(rs:GetDescendants()) do
-                    if v:IsA("RemoteEvent") and (v.Name:lower():match("roll") or v.Name:lower():match("spin")) then
-                        v:FireServer()
-                    elseif v:IsA("RemoteFunction") and (v.Name:lower():match("roll") or v.Name:lower():match("spin")) then
-                        v:InvokeServer()
-                    end
-                end
-                
-                -- 2. Try UI Clicking
-                local playerGui = Player:FindFirstChild("PlayerGui")
-                if playerGui then
-                    for _, gui in pairs(playerGui:GetDescendants()) do
-                        if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
-                            local name = gui.Name:lower()
-                            local text = ""
-                            if gui:IsA("TextButton") then text = gui.Text:lower() end
-                            if name:match("roll") or text:match("roll") or name:match("spin") or text:match("spin") then
-                                if getconnections then
-                                    for _, conn in pairs(getconnections(gui.MouseButton1Click)) do
-                                        conn:Fire()
-                                    end
-                                    for _, conn in pairs(getconnections(gui.Activated)) do
-                                        conn:Fire()
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
+                ClickAt(getgenv().Config.Coords.Roll.X, getgenv().Config.Coords.Roll.Y)
             end)
         end
     end
 end)
 
--- Universal Auto Equip Best Logic
+-- VIM Auto Equip Logic
 task.spawn(function()
     while task.wait(5) do
         if getgenv().Config.AutoEquipBest then
             pcall(function()
-                local rs = game:GetService("ReplicatedStorage")
-                for _, v in pairs(rs:GetDescendants()) do
-                    if v:IsA("RemoteEvent") and v.Name:lower():match("equip") then
-                        v:FireServer("Best")
-                        v:FireServer()
-                    elseif v:IsA("RemoteFunction") and v.Name:lower():match("equip") then
-                        v:InvokeServer("Best")
-                        v:InvokeServer()
-                    end
-                end
-                
-                local playerGui = Player:FindFirstChild("PlayerGui")
-                if playerGui then
-                    for _, gui in pairs(playerGui:GetDescendants()) do
-                        if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and gui.Visible then
-                            local name = gui.Name:lower()
-                            local text = ""
-                            if gui:IsA("TextButton") then text = gui.Text:lower() end
-                            if name:match("equip best") or text:match("equip best") then
-                                if getconnections then
-                                    for _, conn in pairs(getconnections(gui.MouseButton1Click)) do
-                                        conn:Fire()
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
+                ClickAt(getgenv().Config.Coords.Equip.X, getgenv().Config.Coords.Equip.Y)
             end)
         end
     end
 end)
 
--- Universal Auto Craft Logic
+-- VIM Auto Craft Logic
 task.spawn(function()
     while task.wait(10) do
         if getgenv().Config.AutoCraft then
             pcall(function()
-                local rs = game:GetService("ReplicatedStorage")
-                for _, v in pairs(rs:GetDescendants()) do
-                    if v:IsA("RemoteEvent") and v.Name:lower():match("craft") then
-                        v:FireServer("All")
-                        v:FireServer()
-                    elseif v:IsA("RemoteFunction") and v.Name:lower():match("craft") then
-                        v:InvokeServer("All")
-                        v:InvokeServer()
-                    end
-                end
+                ClickAt(getgenv().Config.Coords.Craft.X, getgenv().Config.Coords.Craft.Y)
+            end)
+        end
+    end
+end)
+
+-- VIM Auto Rebirth Logic
+task.spawn(function()
+    while task.wait(15) do
+        if getgenv().Config.AutoRebirth then
+            pcall(function()
+                ClickAt(getgenv().Config.Coords.Rebirth.X, getgenv().Config.Coords.Rebirth.Y)
             end)
         end
     end
@@ -4564,6 +4521,18 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
+local FarmingTab = Window:MakeTab({
+    Name = "Farming",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local CoordinateTab = Window:MakeTab({
+    Name = "Coord Setup",
+    Icon = "rbxassetid://7733965118",
+    PremiumOnly = false
+})
+
 local SettingsTab = Window:MakeTab({
     Name = "Settings",
     Icon = "rbxassetid://7733965118",
@@ -4576,7 +4545,7 @@ local SettingsTab = Window:MakeTab({
 MainTab:AddSection({ Name = "Rolling System" })
 
 MainTab:AddToggle({
-    Name = "Auto Roll",
+    Name = "Auto Roll (Uses Coords)",
     Default = false,
     Callback = function(Value)
         getgenv().Config.AutoRoll = Value
@@ -4599,7 +4568,7 @@ MainTab:AddSlider({
 MainTab:AddSection({ Name = "Inventory & Automation" })
 
 MainTab:AddToggle({
-    Name = "Auto Equip Best Slime",
+    Name = "Auto Equip Best Slime (Uses Coords)",
     Default = false,
     Callback = function(Value)
         getgenv().Config.AutoEquipBest = Value
@@ -4607,11 +4576,90 @@ MainTab:AddToggle({
 })
 
 MainTab:AddToggle({
-    Name = "Auto Craft (All)",
+    Name = "Auto Craft All (Uses Coords)",
     Default = false,
     Callback = function(Value)
         getgenv().Config.AutoCraft = Value
     end
+})
+
+MainTab:AddToggle({
+    Name = "Auto Rebirth (Uses Coords)",
+    Default = false,
+    Callback = function(Value)
+        getgenv().Config.AutoRebirth = Value
+    end
+})
+
+--==================================================
+-- FARMING TAB CONTENT
+--==================================================
+FarmingTab:AddSection({ Name = "Farming Automation" })
+
+FarmingTab:AddToggle({
+    Name = "Auto Farm Mobs",
+    Default = false,
+    Callback = function(Value)
+        getgenv().Config.AutoFarm = Value
+    end
+})
+
+FarmingTab:AddToggle({
+    Name = "Auto Collect Loot/Coins",
+    Default = false,
+    Callback = function(Value)
+        getgenv().Config.AutoCollect = Value
+    end
+})
+
+--==================================================
+-- COORD SETUP TAB CONTENT
+--==================================================
+CoordinateTab:AddSection({ Name = "Instructions" })
+CoordinateTab:AddParagraph("How to use", "1. Click a 'Set Position' button below.\n2. Hover your mouse over the actual button in the game.\n3. Press the 'E' key on your keyboard to lock the coordinates.\n4. The Auto features will now click that exact spot!")
+
+local UIS = game:GetService("UserInputService")
+local settingCoord = nil
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.E and not gameProcessed then
+        if settingCoord then
+            local pos = UIS:GetMouseLocation()
+            getgenv().Config.Coords[settingCoord].X = pos.X
+            getgenv().Config.Coords[settingCoord].Y = pos.Y
+            OrionLib:MakeNotification({Name = "Position Locked", Content = settingCoord .. " set to X: " .. tostring(pos.X) .. ", Y: " .. tostring(pos.Y), Image = "check", Time = 3})
+            settingCoord = nil
+        end
+    end
+end)
+
+CoordinateTab:AddButton({
+    Name = "Set Roll Button Position",
+    Callback = function()
+        settingCoord = "Roll"
+        OrionLib:MakeNotification({Name = "Setup", Content = "Hover mouse over Roll button and press E", Image = "mouse", Time = 5})
+    end    
+})
+CoordinateTab:AddButton({
+    Name = "Set Equip Best Position",
+    Callback = function()
+        settingCoord = "Equip"
+        OrionLib:MakeNotification({Name = "Setup", Content = "Hover mouse over Equip Best button and press E", Image = "mouse", Time = 5})
+    end    
+})
+CoordinateTab:AddButton({
+    Name = "Set Craft Position",
+    Callback = function()
+        settingCoord = "Craft"
+        OrionLib:MakeNotification({Name = "Setup", Content = "Hover mouse over Craft button and press E", Image = "mouse", Time = 5})
+    end    
+})
+CoordinateTab:AddButton({
+    Name = "Set Rebirth Position",
+    Callback = function()
+        settingCoord = "Rebirth"
+        OrionLib:MakeNotification({Name = "Setup", Content = "Hover mouse over Rebirth button and press E", Image = "mouse", Time = 5})
+    end    
 })
 
 --==================================================

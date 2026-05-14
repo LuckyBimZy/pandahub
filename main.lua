@@ -23,7 +23,7 @@ local supportedGames = {
         name = "Tap simulator",
         file = "tapsim.lua"
     },
-    [1234567890] = { -- Ganti dengan ID game Slime RNG yang sebenarnya
+    [92416421522960] = { -- Ganti dengan ID game Slime RNG yang sebenarnya
         name = "Slime RNG",
         file = "slime.lua"
     }
